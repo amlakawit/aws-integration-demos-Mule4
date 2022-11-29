@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="1cd3cbfa-639d-488b-9488-b68e49077cd1" file="config.yaml" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="c79d4837-77a1-4559-8806-00590986fb25" >
+		<db:my-sql-connection host="${mysql.host}" port="${mysql.port}" user="${mysql.user}" password="${mysql.password}" database="${mysql.database}" />
+	</db:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="4e77d79e-6b57-40b1-ab0f-db68fdc6a0f5" >
+		<file:connection workingDir="C:\workspace\python_work\data" />
+	</file:config>
+	<flow name="aws-rds-insertFlow" doc:id="235484db-f652-4eee-b8db-b9e216b76093" >
+		<file:listener doc:name="On New or Updated File" doc:id="6a65f04e-2ccc-4915-9cbb-539b0ea6026f" config-ref="File_Config1" autoDelete="true" outputMimeType="application/json">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5000" />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.json" />
+		</file:listener>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="7fa62999-3e18-4982-9a3d-9e7688916560" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO airports(name, lat, lon, alt, tz, tzone)
+VALUES (:name, :lat, :lon, :alt, :tz, :tzone)]]></db:sql>
+		</db:bulk-insert>
+	</flow>
+</mule>

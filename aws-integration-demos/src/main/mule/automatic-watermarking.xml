@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="d4750fd4-dc5f-453e-98e5-2123cf246106" file="config.yaml" />
+	<db:config name="Database_Config_localMySQL" doc:name="Database Config" doc:id="aaadd4a7-92e2-4c55-a957-80bd9bca8226" >
+		<db:my-sql-connection host="${mysqlLocal.host}" port="${mysqlLocal.port}" user="${mysqlLocal.user}" password="${mysqlLocal.password}" database="${mysqlLocal.database}" />
+	</db:config>
+	<flow name="automatic-watermarkingFlow" doc:id="62d69ad2-cc1c-441f-880c-ef03e9b64303" >
+		<db:listener table="customers" doc:name="AWS MySql" doc:id="49434062-2206-4b7a-8d70-33a83bcf4fc8" config-ref="Database_Config" watermarkColumn="CustomerID" idColumn="CustomerID">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10000"/>
+			</scheduling-strategy>
+		</db:listener>
+		<ee:transform doc:name="Transform Message" doc:id="ca25bcb2-c2f3-4b6d-b6b9-1bdc0f1ff523" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<db:insert doc:name="to local MySql" doc:id="e57f5f6b-5afd-4c01-8b61-9d3ab1c2cf2d" config-ref="Database_Config_localMySQL">
+			<db:sql ><![CDATA[INSERT INTO customers (CustomerID, CustomerName, ContactName, Address, City, PostalCode, Country)
+VALUES (:CustomerID, :CustomerName, :ContactName, :Address, :City, :PostalCode, :Country);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'CustomerID': payload.CustomerID,
+'CustomerName': payload.CustomerName, 
+'ContactName': payload.ContactName, 
+'Address':payload.Address,
+ 'City': payload.City, 
+ 'PostalCode': payload.PostalCode, 
+ 'Country': payload.Country
+}]]]></db:input-parameters>
+		</db:insert>
+	</flow>
+</mule>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="dc9ebbd5-365c-4160-8299-9c22f15fe916" >
+		<file:connection workingDir="C:\workspace\python_work\data" />
+	</file:config>
+	<flow name="s3-automated-writeFlow" doc:id="c635782d-71d1-4dea-960b-a6c46f55b196" >
+		<file:listener doc:name="On New or Updated File" doc:id="700bfee6-bb84-49d8-85f1-dda32bf051d3" config-ref="File_Config" autoDelete="true" moveToDirectory="C:\workspace\MuleSoft\MuleSoftWithFish\data\back_up_folder" outputMimeType='text/csv; separator=","'>
+			<scheduling-strategy >
+				<fixed-frequency frequency="5000" />
+			</scheduling-strategy>
+		</file:listener>
+		<set-variable value="#[attributes.fileName]" doc:name="Set Variable" doc:id="ad3d9379-84af-46a4-961f-901bd1cece37" variableName="fileName"/>
+		<ee:transform doc:name="Transform Message" doc:id="a15586f9-aeb6-4921-a2b5-daa56aa7647a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<s3:create-object doc:name="Create object" doc:id="74f4934d-dacd-4c3a-9700-6777c70edf19" config-ref="Amazon_S3_Configuration" bucketName="mulesoft-amlakawit" key="#[vars.fileName]"/>
+	</flow>
+</mule>

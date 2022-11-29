@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="82f297d9-1a55-4620-9349-b93fd73bf884" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="3d7b4d69-79ea-416c-9244-a25f0924a8c1" >
+		<s3:basic-connection accessKey="${aws.access_key}" secretKey="${aws.secret_access_key}" />
+	</s3:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="98b5c0ea-c46f-4f0d-a873-0c1e992a2283" file="config.yaml" />
+	<flow name="s3-get-dataFlow" doc:id="0ca7fd44-c09f-4852-802d-0e275b9a1315" >
+		<http:listener doc:name="GET" doc:id="005f0dc0-2bc4-4c2d-9495-9179b5dfaab1" config-ref="HTTP_Listener_config" path="/s3-object" allowedMethods="GET"/>
+		<s3:get-object doc:name="Get object" doc:id="b81e7254-d177-40b3-b351-1a752c7af664" config-ref="Amazon_S3_Configuration" bucketName="mulesoft-amlakawit" key="airports.json"/>
+		<ee:transform doc:name="Transform Message" doc:id="1ffe3b5d-cddf-4b9a-bb51-879290c35028" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

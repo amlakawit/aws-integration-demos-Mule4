@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="s3-get-object-countFlow" doc:id="29d6df72-4ef0-45da-9144-4e47bd8b5f04" >
+		<http:listener doc:name="GET" doc:id="6528e098-3efb-4b1e-b9f9-c7709135e684" config-ref="HTTP_Listener_config" path="/s3bucket-object-count" allowedMethods="GET"/>
+		<s3:list-objects doc:name="List objects" doc:id="4440e55c-c959-4328-848c-1d2a35e0291a" config-ref="Amazon_S3_Configuration" bucketName="mulesoft-amlakawit"/>
+		<ee:transform doc:name="Transform Message" doc:id="be4f2037-0bc2-4698-bad5-341771fc0ad9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+sizeOf(payload..key)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

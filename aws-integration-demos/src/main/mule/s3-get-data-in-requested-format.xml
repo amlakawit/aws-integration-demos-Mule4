@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="s3-get-data-in-requested-formatFlow" doc:id="6a9adcb8-ce06-4120-a529-f6da4484d53e" >
+		<http:listener doc:name="GET" doc:id="f18eed71-5e27-4878-b532-1f45cef3ac1f" config-ref="HTTP_Listener_config" path="/s3-object-in-requested-format" allowedMethods="GET"/>
+		<ee:transform doc:name="Transform Message" doc:id="4eef6141-5e4e-4fe3-b75b-11c1de4b5c1a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="requested_data_format" ><![CDATA[%dw 2.0
+output application/java
+---
+if(isEmpty(attributes.queryParams.format)==true)
+	splitBy(attributes.headers.'content-type', '/')[1]
+else
+	attributes.queryParams.format]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<s3:get-object doc:name="Get object" doc:id="b725d1d7-2e40-4790-a950-1cd3f07548a1" config-ref="Amazon_S3_Configuration" bucketName="mulesoft-amlakawit" key="airports.xlsx"/>
+		<choice doc:name="Choice" doc:id="ea18726e-dd18-41b6-b6e5-397100a979a5" >
+			<when expression="#[vars.requested_data_format == 'csv']">
+				<ee:transform doc:name="CSV" doc:id="1021204e-a831-459a-8cbe-d5c26adad15a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+
+	payload.airports 
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[vars.requested_data_format=='xml']">
+				<ee:transform doc:name="XML" doc:id="c2dd2cbb-3968-40bb-a7cc-c4e0e840ea58" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	'airports':
+	{
+		"data": payload.airports
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[vars.requested_data_format=='json']">
+				<ee:transform doc:name="JSON" doc:id="808595ea-f817-459f-aba8-51cdc2581cee" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.airports]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[isEmpty(vars.requested_data_format)]">
+				<ee:transform doc:name="JSON" doc:id="c96525cf-bdad-4cc1-b603-ae90971d7bea" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.airports]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Format Not Supported" doc:id="30f9e98a-c358-46a4-8dbc-c893089d03c2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": vars.requested_data_format default " "++" is not supported data format"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

@@ -1,0 +1,17 @@
+aws:
+  access_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  secret_access_key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  
+mysql:
+  host: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  port: "xxxx"
+  user: "xxxx"
+  password: "xxxxxxxx"
+  database: "xxxxxxx"
+  
+mysqlLocal:
+  host: "xxxxxxxxx"
+  port: "xxxxxxx"
+  user: "xxxxxx"
+  password: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  database: "xxxxxxxxxxxxxxxxxxxx"
